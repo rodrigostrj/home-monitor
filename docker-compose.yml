@@ -1,0 +1,9 @@
+services:
+  api:
+    build: ./backend
+    ports:
+      - "8080:8080"
+    environment:
+      - DB_PATH=/data/home-monitor.db
+    volumes:
+      - ./data:/data
