@@ -173,7 +173,7 @@ home-monitor/
 │   │   ├── dashboard/
 │   │   └── widget-registry.ts
 │   └── package.json
-└── docker-compose.yml               # API + (future) Postgres
+└── docker-compose.yml               # multi-service compose (API, future frontend, etc.)
 ```
 
 ---
@@ -211,6 +211,15 @@ how your son stays engaged.
 - Wire DHT22 to ESP32 on a breadboard. **He does the wiring, you coach.**
 - Flash a sketch that prints temperature + humidity to the serial monitor.
 - Goal he can articulate: *"the little chip is measuring the air."*
+
+### Phase 0.5 — Docker foundation (already done, no extra work needed)
+- Multi-stage `Dockerfile` in `backend/` builds a ~5 MB static binary image.
+- `docker-compose.yml` at the repo root orchestrates services; designed to grow
+  as new apps are added to the Pi (Pihole, Home Assistant, etc.).
+- **Local dev**: use `go run ./cmd/api` — no Docker needed day-to-day.
+- **Pi deploy**: `docker compose up -d` — one command, everything starts.
+- The same `Dockerfile` produces `amd64` (laptop) and `arm64` (Pi) images via
+  `docker buildx build --platform linux/arm64`.
 
 ### Phase 1 — ESP32 publishes to a log-only backend (1 weekend)
 - ESP32: connect to WiFi, POST JSON every 30s to the laptop's API.
@@ -432,4 +441,28 @@ Small, visible steps make for good git history and good teaching moments:
 
 ---
 
-*Last updated: 2026-04-17*
+---
+
+## 13. Docker & Raspberry Pi deployment strategy
+
+Run **locally without Docker** during development — `go run ./cmd/api` is faster
+to iterate on than rebuilding images.
+
+When deploying to the Pi (or any server), use Docker:
+
+```bash
+# build for Pi (ARM64) from your laptop
+docker buildx build --platform linux/arm64 -t home-monitor-api ./backend
+
+# on the Pi — one command starts everything
+docker compose up -d
+```
+
+The `docker-compose.yml` is designed to grow. As you add services to the Pi
+(Pihole, Home Assistant, Grafana, whatever), each gets its own block. The
+`restart: unless-stopped` policy means services survive reboots automatically.
+
+Adding the Angular frontend in Phase 3 means uncommenting the `frontend` service
+in `docker-compose.yml` — nginx serves the static build, the API handles data.
+
+*Last updated: 2026-04-20*

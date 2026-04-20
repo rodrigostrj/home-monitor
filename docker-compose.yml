@@ -1,9 +1,23 @@
 services:
   api:
-    build: ./backend
+    build:
+      context: ./backend
+      args:
+        TARGETOS: linux
+        TARGETARCH: arm64   # change to amd64 for x86 machines
     ports:
       - "8080:8080"
     environment:
       - DB_PATH=/data/home-monitor.db
+      - PORT=8080
     volumes:
       - ./data:/data
+    restart: unless-stopped
+
+  # frontend:                         # added in Phase 3
+  #   image: nginx:alpine
+  #   ports:
+  #     - "80:80"
+  #   volumes:
+  #     - ./frontend/dist/home-monitor:/usr/share/nginx/html:ro
+  #   restart: unless-stopped
