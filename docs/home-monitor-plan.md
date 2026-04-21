@@ -227,16 +227,20 @@ how your son stays engaged.
   JSON body and returns `202 Accepted`. No database yet.
 - Son's job: pick the sensor name, watch the logs scroll in a terminal.
 
-### Phase 2 — Backend with persistence (your solo evenings)
-- goose migrations for `sources` and `readings`.
-- sqlc queries: `insertReading`, `getLatestReadingPerMetric`, `getReadingsInRange`.
-- Endpoints:
-  - `POST /api/sources/{id}/readings` — ingest, requires `X-Api-Key` header
-  - `GET  /api/sources` — list sources
-  - `GET  /api/sources/{id}/readings?metric=…&from=…&to=…`
-  - `GET  /api/readings/latest?metric=…` — latest per source
+### Phase 2a — Data layer (solo evenings)
+- Add deps: `modernc.org/sqlite`, `pressly/goose/v3`.
+- Goose migration for `sources` and `readings` tables.
+- sqlc queries: `InsertReading`, `GetLatestReadingsByMetric`, `GetReadingsInRange`,
+  `InsertSource`, `GetSourceByID`, `GetSourceByAPIKey`, `ListSources`.
+- `internal/storage/db.go`: opens SQLite, runs embedded migrations on startup.
+- Wire DB into `main.go` — verify the app starts and the DB file is created.
+
+### Phase 2b — Persistence wired into handlers (solo evenings)
+- `POST /api/sources/{id}/readings` — persist to DB, requires `X-Api-Key` header.
+- `GET  /api/sources` — list sources.
+- `GET  /api/sources/{id}/readings?metric=…&from=…&to=…` — range query.
+- `GET  /api/readings/latest?metric=…` — latest per source.
 - Table-driven tests for handlers. Integration tests with a real SQLite file.
-- Swagger via `swaggo/swag` or a hand-written `openapi.yaml` — your choice.
 
 ### Phase 3 — Angular dashboard v1 (1–2 weekends, son co-designs)
 - Single temperature tile: current value, unit, last-updated timestamp.

@@ -3,7 +3,8 @@ package config
 import "os"
 
 type Config struct {
-	Port string
+	Port   string
+	DBPath string
 }
 
 func Load() Config {
@@ -11,5 +12,11 @@ func Load() Config {
 	if port == "" {
 		port = "8080"
 	}
-	return Config{Port: port}
+
+	dbPath := os.Getenv("DB_PATH")
+	if dbPath == "" {
+		dbPath = "home-monitor.db"
+	}
+
+	return Config{Port: port, DBPath: dbPath}
 }

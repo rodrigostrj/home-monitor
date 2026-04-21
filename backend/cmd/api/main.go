@@ -12,12 +12,22 @@ import (
 
 	"github.com/rodrigo/home-monitor/internal/api"
 	"github.com/rodrigo/home-monitor/internal/config"
+	"github.com/rodrigo/home-monitor/internal/storage"
 )
 
 func main() {
 	logger := slog.New(slog.NewTextHandler(os.Stdout, nil))
 
 	cfg := config.Load()
+
+	db, err := storage.Open(cfg.DBPath)
+	if err != nil {
+		logger.Error("failed to open database", "err", err)
+		os.Exit(1)
+	}
+	defer db.Close()
+
+	logger.Info("database ready", "path", cfg.DBPath)
 
 	srv := &http.Server{
 		Addr:    net.JoinHostPort("0.0.0.0", cfg.Port),
