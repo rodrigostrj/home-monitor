@@ -1,0 +1,20 @@
+# Compiled binary
+bin/
+
+# SQLite database files
+*.db
+*.db-shm
+*.db-wal
+
+# Environment variables
+.env
+.env.local
+
+# REST Client test file (may contain real API keys)
+*.http
+
+# Air hot-reload temp directory
+tmp/
+
+# macOS
+.DS_Store

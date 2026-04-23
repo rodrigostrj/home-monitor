@@ -1,0 +1,18 @@
+# Dependencies
+node_modules/
+
+# Angular build output
+dist/
+.angular/
+
+# Environment files
+.env
+.env.local
+src/environments/environment.local.ts
+
+# macOS
+.DS_Store
+
+# IDE
+.vscode/
+.idea/

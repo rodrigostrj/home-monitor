@@ -29,9 +29,11 @@ func main() {
 
 	logger.Info("database ready", "path", cfg.DBPath)
 
+	queries := storage.New(db)
+
 	srv := &http.Server{
 		Addr:    net.JoinHostPort("0.0.0.0", cfg.Port),
-		Handler: api.NewServer(logger),
+		Handler: api.NewServer(logger, queries),
 	}
 
 	logger.Info("home-monitor API starting", "addr", srv.Addr)

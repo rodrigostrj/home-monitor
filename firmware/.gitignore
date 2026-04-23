@@ -1,2 +1,5 @@
+# PlatformIO build output
 .pio/
+
+# Secrets — copy secrets.h.example and fill in your values
 include/secrets.h
