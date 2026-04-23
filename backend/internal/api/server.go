@@ -14,11 +14,12 @@ import (
 type Server struct {
 	log     *slog.Logger
 	queries *storage.Queries
+	apiKey  string
 	mux     *http.ServeMux
 }
 
-func NewServer(log *slog.Logger, queries *storage.Queries) http.Handler {
-	s := &Server{log: log, queries: queries, mux: http.NewServeMux()}
+func NewServer(log *slog.Logger, queries *storage.Queries, apiKey string) http.Handler {
+	s := &Server{log: log, queries: queries, apiKey: apiKey, mux: http.NewServeMux()}
 	s.routes()
 	return s.mux
 }
@@ -85,24 +86,19 @@ func writeJSON(w http.ResponseWriter, status int, v any) {
 func (s *Server) handleIngest(w http.ResponseWriter, r *http.Request) {
 	sourceID := r.PathValue("sourceId")
 
-	apiKey := r.Header.Get("X-Api-Key")
-	if apiKey == "" {
-		http.Error(w, "missing X-Api-Key header", http.StatusUnauthorized)
-		return
-	}
-
-	source, err := s.queries.GetSourceByAPIKey(r.Context(), apiKey)
-	if errors.Is(err, sql.ErrNoRows) {
+	if r.Header.Get("X-Api-Key") != s.apiKey {
 		http.Error(w, "invalid API key", http.StatusUnauthorized)
 		return
 	}
-	if err != nil {
-		s.log.Error("get source by api key", "err", err)
-		http.Error(w, "internal error", http.StatusInternalServerError)
+
+	_, err := s.queries.GetSourceByID(r.Context(), sourceID)
+	if errors.Is(err, sql.ErrNoRows) {
+		http.Error(w, "source not found", http.StatusNotFound)
 		return
 	}
-	if source.ID != sourceID {
-		http.Error(w, "API key does not match source", http.StatusForbidden)
+	if err != nil {
+		s.log.Error("get source by id", "err", err)
+		http.Error(w, "internal error", http.StatusInternalServerError)
 		return
 	}
 

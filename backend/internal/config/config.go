@@ -1,13 +1,17 @@
 package config
 
-import "os"
+import (
+	"log/slog"
+	"os"
+)
 
 type Config struct {
 	Port   string
 	DBPath string
+	APIKey string
 }
 
-func Load() Config {
+func Load(log *slog.Logger) Config {
 	port := os.Getenv("PORT")
 	if port == "" {
 		port = "8080"
@@ -18,5 +22,10 @@ func Load() Config {
 		dbPath = "home-monitor.db"
 	}
 
-	return Config{Port: port, DBPath: dbPath}
+	apiKey := os.Getenv("API_KEY")
+	if apiKey == "" {
+		log.Warn("API_KEY env var not set — all ingest requests will be rejected")
+	}
+
+	return Config{Port: port, DBPath: dbPath, APIKey: apiKey}
 }

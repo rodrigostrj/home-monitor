@@ -9,26 +9,8 @@ import (
 	"context"
 )
 
-const getSourceByAPIKey = `-- name: GetSourceByAPIKey :one
-SELECT id, name, kind, api_key, config, created_at FROM sources WHERE api_key = ?
-`
-
-func (q *Queries) GetSourceByAPIKey(ctx context.Context, apiKey string) (Source, error) {
-	row := q.db.QueryRowContext(ctx, getSourceByAPIKey, apiKey)
-	var i Source
-	err := row.Scan(
-		&i.ID,
-		&i.Name,
-		&i.Kind,
-		&i.ApiKey,
-		&i.Config,
-		&i.CreatedAt,
-	)
-	return i, err
-}
-
 const getSourceByID = `-- name: GetSourceByID :one
-SELECT id, name, kind, api_key, config, created_at FROM sources WHERE id = ?
+SELECT id, name, kind, config, created_at FROM sources WHERE id = ?
 `
 
 func (q *Queries) GetSourceByID(ctx context.Context, id string) (Source, error) {
@@ -38,7 +20,6 @@ func (q *Queries) GetSourceByID(ctx context.Context, id string) (Source, error) 
 		&i.ID,
 		&i.Name,
 		&i.Kind,
-		&i.ApiKey,
 		&i.Config,
 		&i.CreatedAt,
 	)
@@ -46,16 +27,15 @@ func (q *Queries) GetSourceByID(ctx context.Context, id string) (Source, error) 
 }
 
 const insertSource = `-- name: InsertSource :one
-INSERT INTO sources (id, name, kind, api_key, config)
-VALUES (?, ?, ?, ?, ?)
-RETURNING id, name, kind, api_key, config, created_at
+INSERT INTO sources (id, name, kind, config)
+VALUES (?, ?, ?, ?)
+RETURNING id, name, kind, config, created_at
 `
 
 type InsertSourceParams struct {
 	ID     string `json:"id"`
 	Name   string `json:"name"`
 	Kind   string `json:"kind"`
-	ApiKey string `json:"api_key"`
 	Config string `json:"config"`
 }
 
@@ -64,7 +44,6 @@ func (q *Queries) InsertSource(ctx context.Context, arg InsertSourceParams) (Sou
 		arg.ID,
 		arg.Name,
 		arg.Kind,
-		arg.ApiKey,
 		arg.Config,
 	)
 	var i Source
@@ -72,7 +51,6 @@ func (q *Queries) InsertSource(ctx context.Context, arg InsertSourceParams) (Sou
 		&i.ID,
 		&i.Name,
 		&i.Kind,
-		&i.ApiKey,
 		&i.Config,
 		&i.CreatedAt,
 	)
@@ -80,7 +58,7 @@ func (q *Queries) InsertSource(ctx context.Context, arg InsertSourceParams) (Sou
 }
 
 const listSources = `-- name: ListSources :many
-SELECT id, name, kind, api_key, config, created_at FROM sources ORDER BY created_at ASC
+SELECT id, name, kind, config, created_at FROM sources ORDER BY created_at ASC
 `
 
 func (q *Queries) ListSources(ctx context.Context) ([]Source, error) {
@@ -96,7 +74,6 @@ func (q *Queries) ListSources(ctx context.Context) ([]Source, error) {
 			&i.ID,
 			&i.Name,
 			&i.Kind,
-			&i.ApiKey,
 			&i.Config,
 			&i.CreatedAt,
 		); err != nil {

@@ -24,7 +24,6 @@ type Source struct {
 	ID        string    `json:"id"`
 	Name      string    `json:"name"`
 	Kind      string    `json:"kind"`
-	ApiKey    string    `json:"api_key"`
 	Config    string    `json:"config"`
 	CreatedAt time.Time `json:"created_at"`
 }

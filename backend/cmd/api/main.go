@@ -18,7 +18,7 @@ import (
 func main() {
 	logger := slog.New(slog.NewTextHandler(os.Stdout, nil))
 
-	cfg := config.Load()
+	cfg := config.Load(logger)
 
 	db, err := storage.Open(cfg.DBPath)
 	if err != nil {
@@ -33,7 +33,7 @@ func main() {
 
 	srv := &http.Server{
 		Addr:    net.JoinHostPort("0.0.0.0", cfg.Port),
-		Handler: api.NewServer(logger, queries),
+		Handler: api.NewServer(logger, queries, cfg.APIKey),
 	}
 
 	logger.Info("home-monitor API starting", "addr", srv.Addr)
