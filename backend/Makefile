@@ -1,7 +1,7 @@
 .PHONY: run build migrate sqlc test
 
 run:
-	go run ./cmd/api
+	@set -a; [ -f .env ] && . ./.env; set +a; go run ./cmd/api
 
 build:
 	go build -o bin/api ./cmd/api
