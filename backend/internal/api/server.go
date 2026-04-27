@@ -12,14 +12,14 @@ import (
 )
 
 type Server struct {
-	log     *slog.Logger
-	queries *storage.Queries
-	apiKey  string
-	mux     *http.ServeMux
+	log    *slog.Logger
+	store  Store
+	apiKey string
+	mux    *http.ServeMux
 }
 
-func NewServer(log *slog.Logger, queries *storage.Queries, apiKey string) http.Handler {
-	s := &Server{log: log, queries: queries, apiKey: apiKey, mux: http.NewServeMux()}
+func NewServer(log *slog.Logger, store Store, apiKey string) http.Handler {
+	s := &Server{log: log, store: store, apiKey: apiKey, mux: http.NewServeMux()}
 	s.routes()
 	return s.mux
 }
@@ -91,7 +91,7 @@ func (s *Server) handleIngest(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	_, err := s.queries.GetSourceByID(r.Context(), sourceID)
+	_, err := s.store.GetSourceByID(r.Context(), sourceID)
 	if errors.Is(err, sql.ErrNoRows) {
 		http.Error(w, "source not found", http.StatusNotFound)
 		return
@@ -118,7 +118,7 @@ func (s *Server) handleIngest(w http.ResponseWriter, r *http.Request) {
 	}
 
 	for _, sm := range req.Samples {
-		if err := s.queries.InsertReading(r.Context(), storage.InsertReadingParams{
+		if err := s.store.InsertReading(r.Context(), storage.InsertReadingParams{
 			SourceID:   sourceID,
 			MetricType: sm.MetricType,
 			Value:      sm.Value,
@@ -138,7 +138,7 @@ func (s *Server) handleIngest(w http.ResponseWriter, r *http.Request) {
 
 // GET /api/sources
 func (s *Server) handleListSources(w http.ResponseWriter, r *http.Request) {
-	sources, err := s.queries.ListSources(r.Context())
+	sources, err := s.store.ListSources(r.Context())
 	if err != nil {
 		s.log.Error("list sources", "err", err)
 		http.Error(w, "internal error", http.StatusInternalServerError)
@@ -189,7 +189,7 @@ func (s *Server) handleGetReadings(w http.ResponseWriter, r *http.Request) {
 		to = t
 	}
 
-	readings, err := s.queries.GetReadingsInRange(r.Context(), storage.GetReadingsInRangeParams{
+	readings, err := s.store.GetReadingsInRange(r.Context(), storage.GetReadingsInRangeParams{
 		SourceID:   sourceID,
 		MetricType: metric,
 		FromTime:   from,
@@ -226,14 +226,14 @@ func (s *Server) handleLatestReadings(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	readings, err := s.queries.GetLatestReadingsByMetric(r.Context(), metric)
+	readings, err := s.store.GetLatestReadingsByMetric(r.Context(), metric)
 	if err != nil {
 		s.log.Error("get latest readings", "err", err)
 		http.Error(w, "internal error", http.StatusInternalServerError)
 		return
 	}
 
-	sources, err := s.queries.ListSources(r.Context())
+	sources, err := s.store.ListSources(r.Context())
 	if err != nil {
 		s.log.Error("list sources for latest readings", "err", err)
 		http.Error(w, "internal error", http.StatusInternalServerError)
